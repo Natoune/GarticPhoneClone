@@ -1,0 +1,56 @@
+{
+    "data" : {
+        "main" : {
+            "id": "T_001",
+            "name": "Main",
+            "colors": {
+                "body": "linear-gradient(200deg,rgba(92,30,166,1) 0%,rgba(200,67,94,1) 100%)",
+                "text": "#ffffff",
+                "button": {
+                    "text": "#301A6B",
+                    "shadow": "#301A6B",
+                    "icon": "#9f3579"
+                }
+            }
+        },
+        "yellow" : {
+            "id": "T_002",
+            "name": "Yellow",
+            "colors": {
+                "body": "#fcbc1d",
+                "text": "#000000",
+                "button": {
+                    "text": "#301A6B",
+                    "shadow": "#301A6B",
+                    "icon": "#fcbc1d"
+                }
+            }
+        },
+        "blue" : {
+            "id": "T_003",
+            "name": "Blue",
+            "colors": {
+                "body": "#0a00a6",
+                "text": "#ffffff",
+                "button": {
+                    "text": "#301A6B",
+                    "shadow": "#301A6B",
+                    "icon": "#0a00a6"
+                }
+            }
+        },
+        "purple" : {
+            "id": "T_004",
+            "name": "Purple",
+            "colors": {
+                "body": "#6b4eea",
+                "text": "#ffffff",
+                "button": {
+                    "text": "#301A6B",
+                    "shadow": "#301A6B",
+                    "icon": "#6b4eea"
+                }
+            }
+        }
+    }
+}

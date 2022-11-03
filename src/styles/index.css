@@ -1,0 +1,38 @@
+@font-face{
+	font-family: "Black";
+	src: url('../../public/fonts/nunito-black.eot');
+	src: url('../../public/fonts/nunito-black.eot') format('embedded-opentype'), url('../../public/fonts/nunito-black.woff2') format('woff2'), url('../../public/fonts/nunito-black.woff') format('woff'), url('../../public/fonts/nunito-black.ttf') format('truetype'), url('../../public/fonts/nunito-black.svg#nunitoblack') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face{
+	font-family: "Bold";
+	src: url('../../public/fonts/nunito-bold.eot');
+	src: url('../../public/fonts/nunito-bold.eot') format('embedded-opentype'), url('../../public/fonts/nunito-bold.woff2') format('woff2'), url('../../public/fonts/nunito-bold.woff') format('woff'), url('../../public/fonts/nunito-bold.ttf') format('truetype'), url('../../public/fonts/nunito-bold.svg#nunitobold') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face{
+    font-family: "Regular";
+    src: url('../../public/fonts/nunito-regular.eot');
+    src: url('../../public/fonts/nunito-regular.eot') format('embedded-opentype'), url('../../public/fonts/nunito-regular.woff2') format('woff2'), url('../../public/fonts/nunito-regular.woff') format('woff'), url('../../public/fonts/nunito-regular.ttf') format('truetype'), url('../../public/fonts/nunito-regular.svg#nunitoregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body, html {
+	overflow-x: hidden;
+}
+
+body {
+	margin: 0;
+	font-family: 'Bold',
+		sans-serif !important;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+	background: var(--bg-color);
+	color: var(--color);
+}

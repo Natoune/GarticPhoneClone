@@ -1,0 +1,403 @@
+.App {
+    background-image: url('../../public/images/textura.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+}
+
+.App-header {
+    border: 4px rgba(29,29,27,.15) solid;
+    box-shadow: inset 0px 2px 0px 0px rgba(255,255,255,.15),0px 3px 0px 0px rgba(255,255,255,0.15);
+    border-radius: 12px;
+    position: absolute;
+    width: 50%;
+    height: 75%;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-align-items: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.backHome {
+	display: flex;
+	flex-direction: row;
+	-moz-box-align: center;
+	align-items: center;
+	-moz-box-pack: center;
+	justify-content: center;
+	font-family: "Black";
+	font-size: 16px;
+	color: rgba(255, 255, 255, 0.6);
+	text-decoration: none;
+	background-color: rgba(38, 28, 92, 0.3);
+	padding: 12px;
+	border: 2px solid rgba(255, 255, 255, 0.3);
+	border-radius: 6px;
+	position: absolute;
+	left: 22px;
+	top: 20px;
+}
+
+.backHome::after {
+	position: absolute;
+	inset: 0px;
+	content: "";
+	margin: 2px;
+	border-radius: 3px;
+}
+
+.backHome:hover::after {
+	background-color: rgba(255, 255, 255, 0.3);
+}
+
+.titlesvg {
+	width: 15%;
+	height: 15%;
+}
+
+.subtitlesvg {
+	width: 17%;
+}
+
+.subtitlesvg path {
+	fill: #fff;
+	stroke: #000;
+	stroke-width: 7;
+}
+
+.joinContainer {
+	width: 70%;
+	max-height: 75%;
+	background-color: rgba(80,24,81,.25);
+	border-radius: 12px;
+	text-transform: uppercase;
+	margin: 15px 0px;
+	padding: 0;
+}
+
+.aligned {
+	flex: 1 1 0%;
+	display: flex;
+	flex-direction: row;
+	-moz-box-align: center;
+	align-items: center;
+	-moz-box-pack: center;
+	justify-content: center;
+	padding: 10%;
+}
+
+.joinContainer .avatar {
+	width: 158px;
+	height: 158px;
+	border: 5px solid rgb(255, 255, 255);
+	border-radius: 50%;
+	margin: 0px;
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	-moz-box-pack: center;
+	justify-content: center;
+}
+
+.joinContainer .avatar span {
+	margin: 0px 0px 4px;
+	width: 156px;
+	height: 182px;
+	min-height: 182px;
+	background-image: url("../../public/images/avatar/0.svg");
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center bottom;
+}
+
+.joinContainer .avatar button {
+	cursor: pointer;
+	position: absolute;
+	bottom: 0px;
+	padding: 0px;
+	width: 50px;
+	height: 50px;
+	background-color: rgb(255, 255, 255);
+	border: 2px solid rgb(255, 255, 255);
+	border-radius: 50%;
+}
+
+.joinContainer .avatar button:hover {
+	background-color: rgb(214, 187, 235);
+}
+
+.joinContainer .avatar button svg {
+	margin: auto;
+}
+
+.prevAvatar {
+	left: -10px;
+}
+
+.nextAvatar {
+	right: -10px;
+}
+
+.joinContainer h1 {
+	font-size: 18px;
+	margin-left: 40px;
+}
+
+.joinContainer .name {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: 0 10%;
+}
+
+.joinContainer .name input, .joinWithCode {
+	height: 46px;
+	display: block;
+	background-color: rgba(255, 255, 255, 0.3);
+	border: 2px solid rgba(255, 255, 255, 0.7);
+	border-radius: 7px;
+	font-family: "Bold";
+	font-size: 28px;
+	color: rgba(255, 255, 255, 0.8);
+	padding: 0px 10px;
+}
+
+.joinContainer .action  {
+	width: 100%;
+	margin: 10% auto;
+	display: block;
+}
+
+.joinContainer .action div {
+	display: inline-block;
+}
+
+.joinContainer .action .actionButton {
+	display: flex;
+	width: 220px;
+	height: 50px;
+	font-size: 19px;
+	line-height: 1.15;
+	background-color: #FFF;
+	margin: 0 15px 20px 15px;
+	box-shadow: 0px 6px 0px 0px var(--button-shadow);
+	color: var(--button-text);
+	align-items: center;
+	border: none;
+	border-radius: 7px;
+	cursor: pointer;
+}
+
+.joinContainer .action .actionButton svg {
+	margin: 0 5px;
+	color: var(--button-icon);
+}
+
+.joinContainer .action .actionButton:hover {
+	background-color: #CBB6E9;
+}
+
+.joinContainer .action .actionButton:active {
+	box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.brush-icon {
+	color: #fff;
+	transition: all .2s ease-in-out;
+}
+.brush-icon:hover {
+	color: #bbb;
+}
+
+.joinWithCodeLabel {
+	font-size: 50%;
+}
+
+.joinWithCode {
+	margin: auto;
+	margin-bottom: 10px;
+}
+
+.joinWithCodeButton {
+	display: inline;
+	width: 220px;
+	height: 50px;
+	font-size: 19px;
+	line-height: 1.15;
+	background-color: #FFF;
+	margin: 0 15px 20px 15px;
+	box-shadow: 0px 6px 0px 0px var(--button-shadow);
+	color: var(--button-text);
+	align-items: center;
+	border: none;
+	border-radius: 7px;
+	cursor: pointer;
+}
+
+.joinWithCodeButton:hover {
+	background-color: #CBB6E9;
+}
+
+.joinWithCodeButton:active {
+	box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.roomsWrapper {
+	position: relative;
+}
+
+.roomsWrapper hr {
+	margin-bottom: 20px !important;
+}
+
+.roomsWrapper h1 {
+	max-width: 75%;
+	margin: auto !important;
+}
+
+.roomsWrapper .rooms {
+	max-height: 280px;
+	overflow: scroll;
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+	display: block;
+}
+
+.roomsWrapper .rooms::-webkit-scrollbar {
+	display: none;
+}
+
+.roomsWrapper .top::after, .middle::after, .bottom::before, .middle::before {
+	display: block;
+	content: "";
+	width: 100%;
+	height: 8px;
+	background-color: rgba(0, 0, 0, 0.3);
+	position: absolute;
+	left: 0px;
+	z-index: 10;
+}
+.roomsWrapper .top::after, .middle::after {
+	bottom: 0;
+}
+
+.roomsWrapper .room {
+	position: relative;
+	width: 95%;
+	height: 62px;
+	min-height: 62px;
+	max-height: inherit;
+	margin: 20px auto;
+	display: flex;
+	flex-direction: row;
+	-moz-box-align: center;
+	align-items: center;
+	background-color: rgba(255, 255, 255, 0.7);
+	box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 7px 0px;
+	color: var(--button-text);
+	border-radius: 25px;
+	align-self: stretch;
+	cursor: pointer;
+}
+
+.roomsWrapper .room .id, .room .users {
+	position: absolute;
+	font-size: 20px;
+}
+
+.roomsWrapper .room .id {
+	left: 20px;
+}
+
+.roomsWrapper .room .users {
+	right: 20px;
+}
+
+@media (max-width: 1480px) {
+	.App-header {
+		width: 70%;
+		height: 80%;
+	}
+}
+
+@media (max-width: 1060px) {
+	.App-header {
+		width: 90%;
+		height: 90%;
+	}
+
+	.joinContainer {
+		width: 85%;
+	}
+
+	.titlesvg {
+		width: 15%;
+	}
+
+	.subtitlesvg {
+		width: 20%;
+		margin-bottom: 15px;
+	}
+}
+
+@media (max-width: 640px) {
+	.App-header {
+		width: 100%;
+		height: 100%;
+	}
+
+	.titlesvg {
+		width: 25%;
+	}
+
+	.subtitlesvg {
+		width: 30%;
+		margin-bottom: 15px;
+	}
+
+	.joinContainer .avatar {
+		width: 100px;
+		height: 100px;
+	}
+
+	.joinContainer .avatar span {
+		background-size: contain;
+	}
+
+	.joinContainer .avatar button {
+		width: 35px;
+		height: 35px;
+	}
+
+	.joinWithCodeLabel {
+		font-size: 75%;
+	}
+
+	.joinWithCode {
+		width: 85%;
+	}
+
+	.joinWithCodeButton {
+		width: 120px;
+		height: 35px;
+		font-size: 100%;
+	}
+}
