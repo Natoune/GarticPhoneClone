@@ -1,0 +1,51 @@
+CONDITIONS D'UTILISATIONS DE GARTIC PHONE
+
+1 - UTILISATION DES DONNÉES
+
+En accédant au site Web de Gartic Phone, vous acceptez d'être lié(e) par les présentes conditions d'utilisation, ainsi que par toutes les lois et réglementations applicables, et vous reconnaissez qu'il vous incombe de les respecter.
+Si vous n'êtes pas d'accord, il vous est interdit d'accéder au jeu.
+Les documents contenus dans Gartic Phone sont protégés par les droits d'auteur et les marques commerciales applicables.
+Nous nous réservons le droit de modifier les Conditions générales et les Politiques de confidentialité à tout moment.
+Le fait de continuer à utiliser le jeu après publication des modifications apportées à cette politique sera considéré comme votre acceptation de ces modifications.
+
+2 - LICENSE
+
+    MIT License
+
+Copyright (c) 2022 Natoune
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+3 - LIMITES
+
+En aucun cas, Gartic Phone ou ses fournisseurs ne peuvent être tenus responsables de dommages. Même si Gartic Phone ou un représentant autorisé du jeu ont été informés oralement ou par écrit de la possibilité de tels dommages. Y compris, mais sans s'y limiter :
+- les dommages dus à la perte de données ou de bénéfices ;
+- les dommages dus à une interruption temporaire ou permanente des services liés à la maintenance ou à des problèmes techniques ;
+- les dommages résultant de l'utilisation ou de l'impossibilité d'utiliser les matériaux de notre jeu.
+Nous n'acceptons aucune responsabilité pour les liens externes envoyés à des tiers. L'inclusion de ces liens ne signifie pas que nous approuvons le matériel ou le contenu de ces sites. Nous ne sommes pas responsables de toute perte, dommage ou inconvénient que vous pourriez subir en jouant à Gartic Phone.
+
+4 - LOI APPLICABLE
+
+Les présentes conditions générales sont régies et interprétées conformément aux lois de la France, et vous êtes irrévocablement sujet(te) à la compétence exclusive des tribunaux de cet État ou de cet endroit.
+
+5 - CONDUITE DES UTILISATEURS
+
+Vous devez traiter tous les utilisateurs avec respect et respecter toutes les conditions générales et politiques mises à jour relatives au Gartic Phone. Respectez les autres utilisateurs du jeu. Le langage et les comportements inappropriés sont interdits. Nous ne sommes pas responsables du contenu généré par les utilisateurs comme les surnoms, les phrases et les dessins. Les utilisateurs sont responsables de leurs actions et de toutes les conséquences qui peuvent en découler.
+
+CONTACT
+Pour toute demande, veuillez contacter l'administrateur à l'adresse garticphone@natoune.tk.

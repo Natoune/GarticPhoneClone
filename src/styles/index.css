@@ -20,6 +20,13 @@
     font-style: normal;
 }
 
+* {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
 body, html {
 	overflow-x: hidden;
 }
@@ -35,4 +42,24 @@ body {
 #root {
 	background: var(--bg-color);
 	color: var(--color);
+}
+
+.loader {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.3);
+	z-index: 9999;
+}
+
+.loader-span {
+	left: 50%;
+	top: 45%;
+}
+
+.ReactModal__Overlay {
+	z-index: 100;
+	display: flex;
+  	justify-content: center;
+  	align-items: center;
 }

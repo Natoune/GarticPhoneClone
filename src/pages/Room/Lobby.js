@@ -1,173 +1,210 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useToast } from '@chakra-ui/react';
-import { GrFormPrevious, GrFormNext } from "react-icons/gr";
-import { IoIosReturnLeft, IoMdCreate } from "react-icons/io";
-import { FaPlay } from 'react-icons/fa';
+import Modal from 'react-modal';
+import Dropdown from 'react-dropdown';
 import { ThemeProvider } from "styled-components";
-import { GlobalStyles } from '../themes/GlobalStyles';
-import { useTheme } from '../themes/useTheme';
-import ThemeSelector from '../themes/ThemeSelector';
-import { delFromLS, getFromLS, setToLS } from '../utils/storage';
+import { GlobalStyles } from '../../themes/GlobalStyles';
+import { useTheme } from '../../themes/useTheme';
+import ThemeSelector from '../../themes/ThemeSelector';
+import { IoIosReturnLeft, IoIosWarning, IoMdSend } from 'react-icons/io';
+import { FaPlay, FaLink } from 'react-icons/fa';
+import { BsFillChatRightFill } from 'react-icons/bs';
+import { useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import RoomsList from './RoomsList';
-import Terms from './Terms';
-import Author from './Author.js';
-import '../styles/Home.css';
+import { delFromLS, getFromLS, setToLS } from '../../utils/storage';
+import '../../styles/Room.css';
+import BounceLoader from 'react-spinners/BounceLoader';
 
-function Home() {
-	const { theme, themeLoaded } = useTheme();
+Modal.setAppElement('#root');
+
+function Lobby() {
+	const {theme, themeLoaded} = useTheme();
 	const [selectedTheme, setSelectedTheme] = useState(theme);
 
 	useEffect(() => {
 		setSelectedTheme(theme);
 	}, [theme, themeLoaded]);
 
-	const toast = useToast();
+	const { room } = useParams();
 	const navigate = useNavigate();
 	let socket = io((process.env.REACT_APP_SOCKETIO_SERVER || 'http://localhost:3001/'), {
 		transports: ['websocket', 'polling']
 	});
-	let avatar = Math.floor(Math.random() * 46);
-	if (typeof getFromLS('avatar') === 'undefined') {
-		setToLS('avatar', avatar);
+
+	// Modals
+	const [confirmModalIsOpen, setConfirmModalIsOpen] = useState(false);
+	const [chatModalIsOpen, setChatModalIsOpen] = useState(false);
+
+	function openConfirmModal() {
+		setConfirmModalIsOpen(true);
+	}
+	function closeConfirmModal() {
+		setConfirmModalIsOpen(false);
 	}
 
-	const { room } = useParams();
+	async function openChatModal() {
+		await setChatModalIsOpen(true);
+		document.querySelector('.chatModal').parentElement.style.background = 'transparent';
+		refreshChat();
+	}
+	function closeChatModal() {
+		setChatModalIsOpen(false);
+	}
 
-	let last = 'none';
-	let lastHeight;
+	let users = [];
 
+	setInterval(() => {
+		socket.on('refreshRoom', () => refreshRoom());
+		socket.on('refreshChat', () => refreshChat());
+        socket.on('startGame', () => navigate(`/${room}/game`));
+	}, 1000);
+
+	const refreshRoom = () => {
+		socket.emit('refreshRoom', room, 'lobby', response => {
+			dataUpdate(response);
+		});
+	}
+
+	let lastHeight = window.innerHeight;
 	const onLoad = () => {
-		// backHome
-		if (typeof room !== 'undefined') {
-			document.querySelector('.backHome').style.display = 'flex';
-			last = '/';
-		}
-
 		// resize
 		if (window.innerHeight < 800)
 			document.querySelector('.App').style.height = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight) * 1.2 + 'px';
 		lastHeight = window.innerHeight;
 
-		// get error
-		if (typeof getFromLS('error') !== 'undefined') {
-			toast({
-				position: "bottom-right",
-				title: "Erreur",
-				description: getFromLS('error').message,
-				status: "error",
-				duration: 5000,
-				isClosable: true,
-			});
-			delFromLS('error');
+		if (typeof getFromLS('name') === 'undefined' || typeof getFromLS('avatar') === 'undefined' || typeof getFromLS('userId') === 'undefined') {
+			return navigate('/'+room+'/login');
 		}
 
-		delFromLS('admin');
-
-		// previous name
-		if (typeof getFromLS('name') !== 'undefined')
-			document.querySelector('.joinContainer .name input').value  = getFromLS('name');
-
-		// avatar
-		if (typeof getFromLS('avatar') !== 'undefined')
-			avatar = getFromLS('avatar');
-
-		document.querySelector('.joinContainer .avatar span').style.backgroundImage = `url(/images/avatar/${avatar}.svg)`;
-	}
-	
-	const createRoom = () => {
-		if (typeof document.querySelector('.joinContainer .name input').value === 'undefined' || document.querySelector('.joinContainer .name input').value.length < 1) {
-			return toast({
-				position: "bottom-right",
-				title: "Erreur",
-				description: 'Veuillez choisir un avatar et un nom !',
-				status: "error",
-				duration: 5000,
-				isClosable: true,
-			});
-		}
-
-		let name = document.querySelector('.joinContainer .name input').value;
-		document.querySelectorAll('.joinContainer .actionButton').forEach(e => e.setAttribute('disabled', ''));
-
-		function socketCreateEmit() {
-			let room = '';
-			for (var i = 0; i < 6; i++) {
-				room += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(Math.floor(Math.random() * 25));
+		let receivedData = false;
+		socket.emit('enterRoom', room, getFromLS('name'), parseInt(getFromLS('avatar')), getFromLS('admin'), getFromLS('userId'), response => {
+			receivedData = true;
+			
+			if (typeof response.error !== "undefined") {
+				if (response.error === 'user_already_exists' || response.error === 'invalid_room' || response.error === 'room_full')
+					setToLS('error', response);
+				delFromLS('admin');
+				return navigate('/');
 			}
 
-			let receivedData = false;
-			socket.emit('create', room, name, avatar, getFromLS('userId'), response => {
-				receivedData = true;
-				if (typeof response.error !== 'undefined') {
-					if (response.error === 'room_exists' || response.error === 'invalid_room_id') {
-						return socketCreateEmit();
-					}
-					document.querySelectorAll('.joinContainer .actionButton').forEach(e => e.removeAttribute('disabled'));
-					return toast({
-						position: "bottom-right",
-						title: "Erreur",
-						description: response.message,
-						status: "error",
-						duration: 5000,
-						isClosable: true,
-					});
-				}
-				setToLS('admin', true);
-				return navigate('/'+response.room);
-			});
-
-			setTimeout(() => {
-				if (!receivedData) {
-					toast({
-						position: "bottom-right",
-						title: "Erreur",
-						description: 'Le serveur n\'a pas répondu dans le délai imparti. Veuillez réessayer.',
-						status: "error",
-						duration: 5000,
-						isClosable: true,
-					});
-					document.querySelectorAll('.joinContainer .actionButton').forEach(e => e.removeAttribute('disabled'));
-				}
-			}, process.env.REACT_APP_SOCKETIO_TIMEOUT);
-		}
-		socketCreateEmit();
-    }
-
-	const escapeHtml = (text) => {
-		var map = {
-		  '&': '&amp;',
-		  '<': '&lt;',
-		  '>': '&gt;',
-		  '"': '&quot;',
-		  "'": '&#039;',
-		  ' ': ''
-		};
-		
-		return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-	  }
-
-	const joinRoom = () => {
-		return navigate('/' + room);
+			dataUpdate(response);
+		});
+	
+		setTimeout(() => {
+			if (!receivedData) {
+				delFromLS('admin');
+				setToLS('error', {
+					error: 'socket.io_timeout',
+					message: 'Le serveur n\'a pas répondu dans le délai imparti. Veuillez réessayer.'
+				});
+				return navigate('/');
+			}
+		}, process.env.REACT_APP_SOCKETIO_TIMEOUT);
 	}
 
-	const roomsList = () => {
-		if (typeof document.querySelector('.joinContainer .name input').value === 'undefined' || document.querySelector('.joinContainer .name input').value.length < 1) {
-			return toast({
-				position: "bottom-right",
-				title: "Erreur",
-				description: 'Veuillez choisir un avatar et un nom !',
-				status: "error",
-				duration: 5000,
-				isClosable: true,
+	const dataUpdate = (response) => {
+		users = response.users;
+		let user = response.users.find(u => u.id === getFromLS('userId'));
+		document.getElementById('usersCount').innerHTML = users.length;
+		document.getElementById('maxUsersCount').innerHTML = response.params.maxUsers;
+		document.querySelector('.players').innerHTML = '';
+
+		if (user.banned) {
+			setToLS('error', {
+				error: 'banned',
+				message: 'Vous avez été banni de cette partie !'
 			});
+			return window.location.replace('/');
 		}
 
-		last = 'main';
-		document.querySelector('.backHome').style.display = 'flex';
-		document.querySelector('.roomsList').style.display = 'block';
-		document.querySelector('.main').style.display = 'none';
+        if (response.hasStarted) return navigate(`/${room}/game`);
+		
+		users.forEach(user => {
+			if (getFromLS('admin') && !user.admin) {
+				document.querySelector('.players').innerHTML += `<div class="player" style="cursor:pointer" onclick="'block'===document.getElementById('player-${user.id}-modal').style.display?document.getElementById('player-${user.id}-modal').style.display='none':document.getElementById('player-${user.id}-modal').style.display='block';">
+					<div class="avatar">
+						<span style="background-image: url('images/avatar/${user.avatar}.svg');"></span>
+					</div>
+					<h1 class="name">${user.name}</h1>
+					${getBadge(user.badge)}
+				</div>
+				<div id="player-${user.id}-modal" class="player-modal">
+					<button class="ban" onclick="document.getElementById('actions').setAttribute('data-action','ban');document.getElementById('actions').setAttribute('data-value',${user.id});document.getElementById('actions').click()">Bannir</button>
+				</div>
+				`;
+			} else {
+				document.querySelector('.players').innerHTML += `<div class="player">
+					<div class="avatar">
+						<span style="background-image: url('images/avatar/${user.avatar}.svg');"></span>
+					</div>
+					<h1 class="name">${user.name}</h1>
+					${getBadge(user.badge)}
+				</div>`;
+			}
+		});
+		document.querySelector('.players').innerHTML += '<br/>';
+
+		if (getFromLS('admin')) {
+			document.querySelector('.paramsContainer .maxPlayers .value input').value = response.params.maxUsers;
+			if (response.params.isPublic) document.querySelector('.paramsContainer .visibility .value .Dropdown-placeholder').innerText = 'PUBLIQUE';
+			else document.querySelector('.paramsContainer .visibility .value .Dropdown-placeholder').innerText = 'PRIVÉE';
+		
+			document.querySelector('.startButton').style.display = 'flex';
+
+			if (response.params.duration === 'slow') document.querySelector('.paramsContainer .duration .value .Dropdown-placeholder').innerText = 'LENTE';
+			else if (response.params.duration === 'normal') document.querySelector('.paramsContainer .duration .value .Dropdown-placeholder').innerText = 'NORMALE';
+			else if (response.params.duration === 'fast') document.querySelector('.paramsContainer .duration .value .Dropdown-placeholder').innerText = 'RAPIDE';
+			else if (response.params.duration === 'host') document.querySelector('.paramsContainer .duration .value .Dropdown-placeholder').innerText = 'CHOIX DE L\'HÔTE À CHAQUE TOUR';
+		} else {
+			if (response.adminId === getFromLS('userId')) {
+				setToLS('admin', true);
+				return window.location.reload(false);
+			}
+			document.querySelector('.paramsContainer .maxPlayers .value').innerHTML = '<p>' + response.params.maxUsers + '</p>';
+			if (response.params.isPublic) document.querySelector('.paramsContainer .visibility .value').innerHTML = '<p>PUBLIQUE</p>';
+			else document.querySelector('.paramsContainer .visibility .value').innerHTML = '<p>PRIVÉE</p>';
+		
+			if (response.params.duration === 'slow') document.querySelector('.paramsContainer .duration .value').innerHTML = '<p>LENTE</p>';
+			else if (response.params.duration === 'normal') document.querySelector('.paramsContainer .duration .value').innerHTML = '<p>NORMALE</p>';
+			else if (response.params.duration === 'fast') document.querySelector('.paramsContainer .duration .value').innerHTML = '<p>RAPIDE</p>';
+			else if (response.params.duration === 'host') document.querySelector('.paramsContainer .duration .value').innerHTML = '<p>CHOIX DE L\'HÔTE À CHAQUE TOUR</p>';
+		}
+
+		document.querySelector('.loader').remove();
+	}
+
+	const sendMessage = () => {
+		socket.emit('sendMessageInChat', room, document.querySelector('.chatModal input').value, getFromLS('userId'));
+		document.querySelector('.chatModal input').value = '';
+	}
+
+	const refreshChat = () => {
+		socket.emit('getChat', room, response => {
+            if (typeof document.querySelector('.chatModal') !== 'undefined') {
+                document.querySelector('.chatModal .messages').innerHTML = '<h1>Début de la conversation</h1>';
+
+                Object.values(response).forEach((m) => {
+                    if (m.id === getFromLS('userId'))
+                        document.querySelector('.chatModal .messages').innerHTML += `<div class="message sended"><p style="color:var(--sub-color)">Vous</p><p>${m.message}</p></div>`;
+                    else
+                        document.querySelector('.chatModal .messages').innerHTML += `<div class="message"><p style="color:var(--sub-color);text-transform:uppercase">${m.name}</p><p>${m.message}</p></div>`;
+                });
+            }
+		});
+	}
+
+	const getBadge = (badge) => {
+		if (badge === 'crown') {
+			return '<svg class="badge" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" style="--darkreader-inline-fill: currentColor; --darkreader-inline-stroke: currentColor;" data-darkreader-inline-fill="" data-darkreader-inline-stroke=""><g><path fill="none" d="M0 0h24v24H0z"></path><path d="M2 19h20v2H2v-2zM2 5l5 3 5-6 5 6 5-3v12H2V5z"></path></g></svg>';
+		}
+		if (badge === 'winner') {
+			return '<svg class="badge" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" style="--darkreader-inline-fill: currentColor; --darkreader-inline-stroke: currentColor;" data-darkreader-inline-fill="" data-darkreader-inline-stroke=""><path d="M305.975 298.814l22.704 2.383V486l-62.712-66.965V312.499l18.214 8.895zm-99.95 0l-22.716 2.383V486l62.711-66.965V312.499l-18.213 8.895zm171.98-115.78l7.347 25.574-22.055 14.87-1.847 26.571-25.81 6.425-10.803 24.314-26.46-2.795-18.475 19.087L256 285.403l-23.902 11.677-18.475-19.15-26.46 2.795-10.803-24.313-25.81-6.363-1.847-26.534-22.118-14.92 7.348-25.573-15.594-21.544 15.644-21.52-7.398-25.523 22.068-14.87L150.5 73.03l25.86-6.362 10.803-24.313 26.46 2.794L232.098 26 256 37.677 279.902 26l18.475 19.149 26.46-2.794 10.803 24.313 25.81 6.425 1.847 26.534 22.055 14.87-7.347 25.574 15.656 21.407zm-49.214-21.556a72.242 72.242 0 1 0-72.242 72.242 72.355 72.355 0 0 0 72.242-72.242zm-72.242-52.283a52.282 52.282 0 1 0 52.282 52.283 52.395 52.395 0 0 0-52.282-52.245z"></path></svg>';
+		}
+
+		return '';
+	};
+
+	const startGame = () => {
+        socket.emit('startGame', room, getFromLS('userId'));
 	}
 
 	return (
@@ -176,6 +213,7 @@ function Home() {
 		themeLoaded && <ThemeProvider theme={ selectedTheme }>
 			<ThemeSelector setter={ setSelectedTheme } />
 			<GlobalStyles/>
+            <img style={{ display: 'none' }} src='/load.gif' alt='' onLoad={onLoad}/>
 			<div className="App" onMouseMove={() => {
 				if (window.innerHeight < 800) {
 					if (lastHeight !== window.innerHeight) {
@@ -186,31 +224,41 @@ function Home() {
 					document.querySelector('.App').style.height = '100vh';
 				}
 			}}>
+				<div className='loader'>
+					<BounceLoader className='loader-span' color='#ffffff' />
+				</div>
+				<div>
+					<button className='chatButton' onClick={openChatModal}>
+						<BsFillChatRightFill size={32} />
+					</button>
+					<Modal
+						isOpen={chatModalIsOpen}
+						onRequestClose={closeChatModal}
+						contentLabel="Example Modal"
+						className='chatModal'
+					>
+						<h1>Chat</h1>
+						<div className='messages'></div>
+						<input type='text' onKeyDown={e => {
+							if (e.key === "Enter") sendMessage();
+						}}></input>
+						<button onClick={sendMessage}>
+							<IoMdSend size={32} />
+						</button>
+					</Modal>
+				</div>
 				<header className="App-header">
-					<img src='/load.gif' alt='' onLoad={onLoad}/>
-					<button className="backHome" style={{ display: 'none' }} onClick={() => {
-						if (last === 'roomsList') {
-							document.querySelector('.roomsList').style.display = 'block';
-							document.querySelector('.author').style.display = 'none';
-							document.querySelector('.terms').style.display = 'none';
-							document.querySelector('.main').style.display = 'none';
-							last = 'main';
-						} else if (last === 'main') {
-							document.querySelector('.roomsList').style.display = 'none';
-							document.querySelector('.author').style.display = 'none';
-							document.querySelector('.terms').style.display = 'none';
-							document.querySelector('.main').style.display = 'block';
-							if (typeof room === 'undefined') {
-								document.querySelector('.backHome').style.display = 'none';
-								last = 'none'
-							} else {
-								last = '/'
-							}
-						} else if (last === '/') {
-							document.querySelector('.backHome').style.display = 'none';
-							navigate('/');
+					<button style={{ display: 'none' }} id='actions' onClick={() => {
+						let action = document.getElementById('actions').getAttribute('data-action');
+						let value = document.getElementById('actions').getAttribute('data-value');
+
+						if (typeof action !== 'undefined' && typeof value !== 'undefined' && action === 'ban') {
+							socket.emit('ban', room, value, getFromLS('userId'));
 						}
-						document.querySelector('.credits').style.display = 'block';
+					}}></button>
+					<button className="backHome" onClick={() => {
+						socket.disconnect();
+						navigate('/');
 					}}><IoIosReturnLeft size={25} />&nbsp;RETOUR</button>
 					<svg className="titlesvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1530 925" width="1530" height="925" preserveAspectRatio="xMidYMid meet">
 							<defs>
@@ -296,419 +344,120 @@ function Home() {
 								</g>
 							</g>
 					</svg>
-					<svg version="1.1" className="subtitlesvg" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-							width="100%" viewBox="0 0 1059 137" enableBackground="new 0 0 1059 137">
-							<path fill="#000" opacity="1.000000" stroke="none" 
-								d="
-							M264.333313,138.000000 
-								C252.605835,134.160645 250.924942,127.432747 250.967636,118.103714 
-								C251.068909,95.970070 250.958115,73.835518 251.032043,51.701664 
-								C251.050018,46.322178 252.127838,41.278389 256.720184,37.605713 
-								C260.887146,34.273197 264.997650,34.000225 269.475372,36.940628 
-								C271.662659,38.376987 274.073730,39.472633 276.289673,40.671734 
-								C290.424591,29.149635 311.393219,34.566574 319.780731,49.984543 
-								C328.096466,65.270638 327.939514,79.753304 317.200134,94.013680 
-								C310.168762,103.350334 296.976807,107.821991 284.770416,104.375885 
-								C283.205658,103.934128 281.637024,103.506065 278.998505,102.774536 
-								C278.998505,108.976677 279.059448,114.673584 278.980713,120.368576 
-								C278.907898,125.633690 278.002380,130.716797 273.370300,134.014984 
-								C271.297333,135.490997 268.739136,136.285446 266.200562,137.694595 
-								C265.555542,138.000000 265.111115,138.000000 264.333313,138.000000 
-							M293.360107,60.777878 
-								C292.423737,60.525097 291.498016,60.107765 290.549286,60.046551 
-								C284.886597,59.681229 280.928833,61.913670 279.377472,66.246994 
-								C277.540802,71.377464 279.143219,78.658165 283.656830,80.756409 
-								C286.365417,82.015564 290.802460,82.185905 293.289673,80.776115 
-								C299.584167,77.208260 299.693817,66.022438 293.360107,60.777878 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M1060.000000,91.625000 
-								C1052.837158,102.536148 1037.837891,108.028122 1025.034180,105.653587 
-								C1016.764954,104.120003 1008.571960,103.293633 1001.309998,98.218758 
-								C989.919312,90.258667 984.693787,79.298889 986.247742,65.965324 
-								C987.850586,52.211712 995.641663,42.066364 1008.938416,37.167141 
-								C1028.843994,29.832878 1050.726318,37.649426 1058.351074,58.620365 
-								C1058.506836,59.049068 1059.009399,59.351711 1059.675171,59.856571 
-								C1060.000000,62.700016 1060.000000,65.400032 1059.696045,68.742294 
-								C1058.475220,73.594200 1056.185425,76.010612 1051.564819,76.101601 
-								C1046.295410,76.205368 1041.036987,76.834076 1035.767090,76.961937 
-								C1029.223511,77.120720 1022.673157,77.000000 1016.125732,77.000000 
-								C1015.977478,77.480560 1015.829163,77.961128 1015.680908,78.441689 
-								C1017.508667,79.606964 1019.297424,81.694527 1021.171204,81.773888 
-								C1028.333008,82.077194 1035.652832,82.551628 1042.669434,81.431877 
-								C1052.065430,79.932419 1055.763550,80.938553 1060.000000,89.000000 
-								C1060.000000,89.750000 1060.000000,90.500000 1060.000000,91.625000 
-							M1024.211304,55.152756 
-								C1018.460754,55.694725 1016.360413,57.664562 1016.219971,62.746925 
-								C1020.975464,62.746925 1025.726318,62.746925 1030.581055,62.746925 
-								C1031.573486,57.822712 1028.198120,56.681931 1024.211304,55.152756 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M1.000000,41.458069 
-								C4.876595,39.025604 8.874232,37.244904 12.549433,34.948231 
-								C13.537204,34.330963 13.858898,32.162876 13.949232,30.674099 
-								C14.487039,21.810556 18.353415,16.687244 26.099089,14.872408 
-								C32.694168,13.327159 40.489513,18.190577 41.945580,24.783882 
-								C42.087353,25.425835 41.998657,26.115471 42.100529,26.769960 
-								C42.847313,31.567968 43.287163,35.893360 49.807987,37.256901 
-								C54.709240,38.281773 56.770298,43.680141 55.927238,48.963295 
-								C55.174648,53.679543 52.051651,56.880852 47.602348,57.781059 
-								C43.754070,58.559666 42.861515,60.297779 42.940117,63.837059 
-								C43.128410,72.315361 43.073345,80.801659 42.972382,89.283012 
-								C42.885563,96.575775 38.491257,103.249741 32.922634,104.897423 
-								C23.016949,107.828400 14.273019,100.792862 14.041561,89.477280 
-								C13.861322,80.665726 13.899523,71.845955 14.050210,63.033421 
-								C14.101866,60.012527 12.907057,58.913521 10.120852,57.841442 
-								C7.030384,56.652287 4.437112,54.170979 1.313674,52.126152 
-								C1.000000,48.638714 1.000000,45.277424 1.000000,41.458069 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M106.562500,1.000001 
-								C109.286858,3.229764 112.192413,5.101953 113.731041,7.764159 
-								C116.877808,13.208848 114.183701,20.232811 108.074081,21.751549 
-								C96.778862,24.559338 85.336914,26.852377 73.866997,28.847727 
-								C68.693405,29.747747 63.807476,24.486637 63.310123,18.573664 
-								C62.925453,14.000417 67.131508,8.965402 72.026245,8.012432 
-								C80.723587,6.319123 89.412300,4.580714 98.092575,2.802339 
-								C98.670822,2.683870 99.147583,2.070043 99.835770,1.343308 
-								C102.041664,1.000000 104.083336,1.000000 106.562500,1.000001 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M220.571533,1.000002 
-								C223.478851,2.972584 226.703598,4.478177 228.288834,7.010227 
-								C232.173553,13.215110 229.519287,20.105711 222.412415,21.882368 
-								C212.201157,24.435087 201.781052,26.143953 191.471970,28.316795 
-								C184.688644,29.746517 180.351624,26.985340 178.907867,20.096956 
-								C177.737381,14.512501 181.353683,9.109073 186.929138,8.020097 
-								C195.654938,6.315805 204.375381,4.583323 213.086060,2.803922 
-								C213.666428,2.685371 214.145416,2.070593 214.835785,1.343309 
-								C216.714355,1.000000 218.428711,1.000000 220.571533,1.000002 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M905.000000,26.051434 
-								C904.994629,18.755543 904.565308,11.936728 910.604065,6.802973 
-								C914.552185,3.446587 919.260193,2.246979 923.301941,4.521523 
-								C926.845825,6.515865 930.750000,10.358560 931.630554,14.065253 
-								C933.327148,21.207745 933.000488,28.830868 933.491943,35.954121 
-								C938.665100,35.631943 943.993896,34.654751 949.203674,35.092972 
-								C966.963013,36.586796 975.085510,48.858624 977.771484,62.867821 
-								C980.316284,76.140564 976.100708,87.880173 966.139954,97.407402 
-								C956.648315,106.485886 942.377930,107.579239 931.428650,100.239670 
-								C930.171936,99.397278 927.188721,100.285637 925.437805,101.199173 
-								C921.653625,103.173630 918.509277,107.058220 913.544861,104.692314 
-								C906.266968,101.223877 905.139465,94.425018 905.072510,87.536835 
-								C904.874695,67.207031 905.000671,46.874088 905.000000,26.051434 
-							M948.535095,62.045300 
-								C945.530945,58.541588 941.333984,57.987297 937.636414,59.449562 
-								C933.371399,61.136265 931.311768,65.582596 931.425781,69.942299 
-								C931.538452,74.252441 932.727478,78.538239 937.510315,80.899017 
-								C941.469177,82.853111 944.666748,81.655746 947.648254,79.530205 
-								C951.666687,76.665474 952.195251,68.270599 948.535095,62.045300 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M403.023254,95.710709 
-								C401.085693,103.550385 393.510406,107.052284 389.090149,106.484993 
-								C380.808289,105.422127 375.340637,99.160919 375.061890,89.994820 
-								C374.813965,81.840530 375.022858,73.672897 374.990845,65.511299 
-								C374.970551,60.341209 372.556915,57.132755 368.705719,57.033047 
-								C364.467896,56.923332 362.136658,60.005692 361.983643,65.593826 
-								C361.716064,75.365967 361.802856,85.180946 360.844543,94.889473 
-								C360.197418,101.445305 353.526489,105.856377 347.269928,105.717819 
-								C340.305115,105.563568 334.850555,100.071632 334.016479,94.932564 
-								C333.569244,92.176682 333.054077,89.387688 333.044159,86.611938 
-								C332.965485,64.625565 332.982819,42.638763 333.014252,20.652157 
-								C333.022095,15.165706 334.380280,10.254917 338.903809,6.538821 
-								C342.882507,3.270300 349.587280,2.472691 354.149994,5.075680 
-								C359.137756,7.921149 362.626831,14.715803 361.677917,19.668604 
-								C361.400116,21.118523 361.059967,22.585188 361.033752,24.049292 
-								C360.950867,28.676922 361.003143,33.306976 361.003143,37.351208 
-								C367.914124,36.534531 374.391937,35.607426 380.900909,35.035736 
-								C392.153839,34.047375 402.784607,44.519291 403.025269,54.642139 
-								C403.317078,66.918060 403.688324,79.192207 403.934052,91.468948 
-								C403.959442,92.738548 403.365601,94.020554 403.023254,95.710709 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M752.498108,33.797745 
-								C758.589417,36.067406 760.808838,40.839432 760.901428,46.335773 
-								C761.162415,61.823612 761.157104,77.321106 760.932800,92.810104 
-								C760.786316,102.925392 751.293274,108.141853 742.791260,102.784149 
-								C739.051453,100.427376 736.368652,98.977394 732.042908,102.251404 
-								C723.347351,108.832710 706.525085,104.303024 699.448120,98.120483 
-								C683.385925,84.088188 683.028870,60.369896 697.263916,44.387527 
-								C704.898987,35.815247 723.152832,29.828508 733.969482,39.185184 
-								C735.003296,40.079483 737.640442,39.829605 739.217712,39.250877 
-								C743.617554,37.636448 747.851501,35.569828 752.498108,33.797745 
-							M734.583191,72.851486 
-								C735.560852,67.795609 733.936584,63.291916 729.810425,60.751610 
-								C727.317322,59.216713 723.354004,58.873676 720.413086,59.555531 
-								C716.453247,60.473606 713.841675,67.655022 714.775574,72.570641 
-								C715.915039,78.568497 718.800598,81.799309 723.190369,81.992050 
-								C729.186584,82.255325 732.147034,79.977760 734.583191,72.851486 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M825.637939,56.822666 
-								C831.090271,42.959385 841.213806,35.584084 855.415344,34.559101 
-								C859.661682,34.252625 864.628479,35.955280 868.314697,38.258678 
-								C871.550842,40.280888 873.769348,40.586067 876.697327,38.699406 
-								C877.530029,38.162853 878.424927,37.723267 879.264160,37.196095 
-								C882.745850,35.009037 886.452454,31.939203 890.542175,34.501564 
-								C894.906494,37.235977 897.029541,41.804436 897.013184,47.191029 
-								C896.968079,62.013565 897.028137,76.836472 896.958069,91.658813 
-								C896.949707,93.434799 896.626465,95.286652 896.054688,96.969254 
-								C893.528198,104.403076 886.723206,107.032288 879.789124,103.332558 
-								C877.345947,102.028954 874.961853,100.614540 872.663940,99.314751 
-								C855.246216,113.869652 828.148132,100.790649 823.970154,79.063698 
-								C822.525024,71.548721 822.674255,64.305878 825.637939,56.822666 
-							M862.069641,81.967110 
-								C867.654968,80.063622 871.402527,74.946167 870.955872,69.832779 
-								C870.485718,64.451805 866.645508,59.704536 862.229858,59.046036 
-								C855.491150,58.041103 851.195862,62.118942 850.384155,70.292076 
-								C849.743408,76.743660 854.543457,81.912102 862.069641,81.967110 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M587.258057,98.789169 
-								C575.083618,90.981209 569.730286,79.756561 571.235168,66.152588 
-								C572.761536,52.353489 580.511353,42.120720 593.813293,37.222076 
-								C615.062927,29.396542 636.612793,38.627693 643.681519,59.492580 
-								C647.034119,69.388741 644.457031,76.866783 631.428772,76.980385 
-								C622.937378,77.054428 614.444763,76.986618 605.952820,77.010490 
-								C604.357178,77.014977 602.761841,77.152390 601.166382,77.228470 
-								C600.983154,77.718040 600.799927,78.207611 600.616699,78.697182 
-								C603.367065,80.072357 606.023193,82.321442 608.888489,82.630135 
-								C613.940063,83.174370 619.127563,82.666458 624.241821,82.341629 
-								C627.349365,82.144264 630.425537,81.460098 633.516907,81.001724 
-								C638.517273,80.260307 642.252075,82.573273 643.666809,86.987968 
-								C645.165527,91.664955 643.634705,96.166367 639.410400,99.248360 
-								C631.669861,104.895844 622.594482,106.292046 613.506165,105.809372 
-								C604.538879,105.333115 595.306702,104.640289 587.258057,98.789169 
-							M604.174683,62.996502 
-								C607.944885,62.996502 611.715149,62.996502 615.640259,62.996502 
-								C616.422424,57.316467 612.533142,56.218063 608.993103,55.200378 
-								C606.145874,54.381855 601.390747,57.647636 601.168091,60.480431 
-								C601.107239,61.254185 602.587219,62.149063 604.174683,62.996502 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M79.525513,37.266998 
-								C95.349243,32.579750 109.379379,34.594521 120.962959,46.554241 
-								C125.748398,51.495064 128.775620,57.552792 129.904999,64.415985 
-								C131.238770,72.521248 126.771523,76.765984 116.443619,76.961494 
-								C107.955963,77.122169 99.462883,76.986908 90.972290,77.010155 
-								C89.373039,77.014534 87.774139,77.147644 86.175072,77.221344 
-								C85.988258,77.709167 85.801445,78.196991 85.614624,78.684807 
-								C88.358597,80.062325 91.007561,82.314011 93.867455,82.624817 
-								C98.918266,83.173721 104.106064,82.674332 109.219978,82.351593 
-								C112.326324,82.155556 115.401131,81.464241 118.491028,81.001610 
-								C123.486580,80.253624 127.226845,82.555115 128.659698,86.961655 
-								C130.180450,91.638557 128.644836,96.141388 124.433907,99.229309 
-								C116.705528,104.896606 107.639977,106.201141 98.537712,105.830505 
-								C90.034439,105.484253 81.616554,104.224182 73.733177,100.026360 
-								C55.860481,90.509308 50.446777,65.817154 62.680054,49.629093 
-								C67.097809,43.783161 72.928734,40.485996 79.525513,37.266998 
-							M92.633377,62.999950 
-								C95.244896,62.999950 97.856422,62.999950 100.432846,62.999950 
-								C100.735435,58.136761 97.676643,55.062267 93.061844,55.059025 
-								C89.294708,55.056377 86.247978,58.516750 86.346725,62.999893 
-								C88.137772,62.999893 89.937408,62.999893 92.633377,62.999950 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M224.952148,77.000000 
-								C216.699661,77.000000 208.939407,77.000000 201.179138,77.000000 
-								C200.991592,77.565086 200.804031,78.130165 200.616486,78.695251 
-								C203.367813,80.071297 206.025146,82.322815 208.891159,82.630463 
-								C213.946594,83.173157 219.137497,82.659241 224.255569,82.334084 
-								C227.200058,82.147026 230.110138,81.443321 233.040649,81.005257 
-								C238.151123,80.241295 241.870148,82.393463 243.762741,86.999657 
-								C245.479797,91.178619 243.613327,97.223457 238.885300,99.376228 
-								C232.407089,102.325890 225.385788,105.073685 218.402344,105.686249 
-								C208.394394,106.564125 198.412918,104.973854 189.102280,100.114616 
-								C170.768372,90.546089 165.351578,66.058182 177.859650,49.534382 
-								C193.086914,29.418394 228.531555,28.926088 241.885651,55.019222 
-								C243.501602,58.176704 244.449799,61.861534 244.879135,65.402397 
-								C245.796555,72.968750 242.081024,76.260185 232.441605,76.954605 
-								C230.120132,77.121841 227.777344,76.992790 224.952148,77.000000 
-							M203.364548,62.988461 
-								C207.439621,62.988461 211.514709,62.988461 215.589783,62.988461 
-								C215.932693,62.489010 216.275589,61.989559 216.618484,61.490108 
-								C215.112320,59.703716 213.905899,56.955776 212.025574,56.369606 
-								C209.567993,55.603485 206.202896,55.791950 203.903259,56.931725 
-								C200.404739,58.665695 200.355179,60.645020 203.364548,62.988461 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M520.999878,86.821808 
-								C520.910156,97.401146 517.314819,103.616829 509.999847,104.915283 
-								C500.365662,106.625412 493.768433,102.128746 493.301025,91.230560 
-								C492.648041,76.005974 493.199524,60.677208 494.183655,45.454300 
-								C494.789948,36.075130 503.913025,31.901272 511.375427,37.416527 
-								C515.895752,40.757370 519.034302,40.304703 523.552124,37.939148 
-								C537.122925,30.833456 553.466492,34.988304 560.015137,46.812420 
-								C562.315918,50.966652 563.531982,56.119675 563.825134,60.903515 
-								C564.404541,70.359673 564.087891,79.877594 563.966492,89.367752 
-								C563.862854,97.470085 559.470886,103.239502 552.832397,105.053375 
-								C544.041626,107.455345 535.096069,100.476624 535.015747,89.335213 
-								C534.958191,81.342598 535.029358,73.349121 534.988403,65.356308 
-								C534.957520,59.341362 532.908386,57.054245 527.661133,57.009003 
-								C523.018494,56.968971 521.044983,59.401184 521.011169,65.364548 
-								C520.971497,72.358192 521.000671,79.352234 520.999878,86.821808 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M458.976990,35.878090 
-								C473.915619,39.457012 484.202057,51.495621 485.856110,64.247337 
-								C488.034454,81.040916 480.923645,93.864128 466.627441,101.134232 
-								C449.444519,109.872322 429.508759,105.817894 417.983063,90.230125 
-								C408.556946,77.481865 409.107819,60.956234 419.397217,48.121593 
-								C426.823395,38.858440 436.960815,34.983196 448.390717,34.252171 
-								C451.735535,34.038250 455.171509,35.249027 458.976990,35.878090 
-							M441.970947,79.459297 
-								C444.917389,82.681908 448.250732,84.072655 452.585327,82.159180 
-								C460.183441,78.805038 461.803467,66.380257 455.287964,60.862617 
-								C451.515442,57.667831 444.196899,58.399483 441.420868,62.248940 
-								C438.077881,66.884544 438.076111,73.967575 441.970947,79.459297 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M136.000000,45.000000 
-								C136.327179,34.410530 136.186630,24.276093 137.150711,14.247850 
-								C137.763870,7.869803 144.249039,3.717565 150.900757,4.008556 
-								C156.876587,4.269979 162.024948,8.866081 162.992264,15.076499 
-								C163.522903,18.483377 163.941666,21.947861 163.956436,25.388321 
-								C164.044342,45.846825 164.056305,66.306213 163.941101,86.764450 
-								C163.922729,90.029053 163.457260,93.374313 162.627258,96.532150 
-								C161.298553,101.587273 155.001556,105.897804 149.839905,105.759499 
-								C144.371170,105.612968 138.429398,101.085243 137.138779,95.709213 
-								C136.452850,92.851944 136.072830,89.854462 136.049332,86.916321 
-								C135.938919,73.111626 136.000076,59.305569 136.000000,45.000000 
-							z"/>
-							<path fill="#000000" opacity="1.000000" stroke="none" 
-								d="
-							M810.871094,60.931183 
-								C808.246216,62.034767 805.919067,62.935062 803.757080,64.133316 
-								C799.827026,66.311493 797.978088,69.624016 797.932800,74.267296 
-								C797.866699,81.048988 797.584351,87.851250 796.915466,94.597305 
-								C796.365723,100.142296 791.094727,104.597588 784.969788,105.475700 
-								C780.244690,106.153122 774.052002,102.843361 772.157715,98.172966 
-								C771.061401,95.469803 770.149780,92.477882 770.101807,89.600113 
-								C769.884949,76.604774 769.706970,63.592690 770.188843,50.611649 
-								C770.332397,46.745476 771.970703,42.490574 774.158325,39.245872 
-								C777.672791,34.033272 782.540466,33.700745 787.734436,37.198376 
-								C788.145142,37.474968 788.574341,37.723877 788.987427,37.997093 
-								C791.447449,39.624306 793.872986,42.450157 796.373718,42.517731 
-								C798.490662,42.574936 800.652222,39.385891 802.866882,37.730812 
-								C809.040771,33.116817 817.906494,34.803249 821.726746,41.632622 
-								C824.373596,46.364254 824.281006,54.352123 816.135315,58.412098 
-								C814.503052,59.225651 812.873901,60.045380 810.871094,60.931183 
-							z"/>
-					</svg>
-					<div className="joinContainer">
-						<section style={{ display: 'none', position: 'relative' }} className='roomsList'>
-							<RoomsList />
-						</section>
-						<section style={{ display: 'none', position: 'relative' }} className='terms'>
-							<Terms />
-						</section>
-						<section style={{ display: 'none', position: 'relative' }} className='author'>
-							<Author />
-						</section>
-						<section className="main">
-							<div className="aligned">
-								<section className="avatar">
-									<span></span>
-									<button className="prevAvatar" onClick={() => {
-										if (avatar === 0) {
-											avatar = 45;
-											document.querySelector('.joinContainer .avatar span').style.backgroundImage = `url(/images/avatar/${avatar}.svg)`;
-										} else {
-											avatar--;
-											document.querySelector('.joinContainer .avatar span').style.backgroundImage = `url(/images/avatar/${avatar}.svg)`;
-										}
-										setToLS('avatar', avatar);
-									}}>
-										<GrFormPrevious size={32} />
-									</button>
-									<button className="nextAvatar" onClick={() => {
-										if (avatar === 45) {
-											avatar = 0;
-											document.querySelector('.joinContainer .avatar span').style.backgroundImage = `url(/images/avatar/${avatar}.svg)`;
-										} else {
-											avatar++;
-											document.querySelector('.joinContainer .avatar span').style.backgroundImage = `url(/images/avatar/${avatar}.svg)`;
-										}
-										setToLS('avatar', avatar);
-									}}>
-										<GrFormNext size={32} />
-									</button>
-								</section>
-								<h1>Choisis un avatar et un pseudo</h1>
+					<div className='center'>
+						<div className='left'>
+							<h1>JOUEURS <span id='usersCount'>0</span>/<span id='maxUsersCount'>10</span></h1>
+							<div className='playersWrapper'>
+								<div className='players top' onScroll={() => {
+									if (document.querySelector('.players').scrollTop < 10) {
+										document.querySelector('.players').setAttribute('class', 'players top');
+									} else if (document.querySelector('.players').scrollTop > 10 && document.querySelector('.players').scrollTop + document.querySelector('.players').offsetHeight + 10 <= document.querySelector('.players').scrollHeight) {
+										document.querySelector('.players').setAttribute('class', 'players middle');
+									} else {
+										document.querySelector('.players').setAttribute('class', 'players bottom');
+									}
+								}}>
+								</div>
 							</div>
-							<section className="name">
-								<input type="text" placeholder="John Doe" min="1" max="25" onKeyUp={() => setToLS('name', escapeHtml(document.querySelector('.joinContainer .name input').value))}></input>
-							</section>
-							<section className="action">
-								{
-									typeof room !== 'undefined' &&
-									<div>
-										<button className="actionButton" onClick={joinRoom}>
-											<FaPlay size={25} />
-											<strong>Rejoindre la partie</strong>
-										</button>
+						</div>
+						<div className='right'>
+							<div className='paramsContainer'>
+								<div className='param maxPlayers'>
+									<div className='legend'>
+										<span>
+											<h2>Nombre de joueurs maximum</h2>
+											<p>Limite le nombre de personnes qui peuvent rejoindre la partie. (max 25)</p>
+										</span>
 									</div>
-								}
-								{
-									typeof room === 'undefined' &&
-									<>
-									<div>
-										<button className="actionButton" onClick={createRoom}>
-											<IoMdCreate size={40} />
-											<strong>Créer une nouvelle partie</strong>
-										</button>
+									<div className='value'>
+										<input type='number' placeholder='10' min='4' max='25' onKeyUp={() => {
+											if (document.querySelector('.paramsContainer .param .value input').value > 25)
+												document.querySelector('.paramsContainer .param .value input').value = 25;
+											if (document.querySelector('.paramsContainer .param .value input').value < 4)
+												document.querySelector('.paramsContainer .param .value input').value = 4;
+											if (isNaN(parseInt(document.querySelector('.paramsContainer .param .value input').value)))
+												document.querySelector('.paramsContainer .param .value input').value = '';
+										}} onChange={() => {
+											socket.emit('params', room, 'maxUsers', document.querySelector('.paramsContainer .param .value input').value, getFromLS('userId'));
+										}}></input>		
 									</div>
-									<div>
-										<button className="actionButton" onClick={roomsList}>
-											<FaPlay size={25} />
-											<strong>Rejoindre une partie existante</strong>
-										</button>
+								</div>
+								<div className='param visibility'>
+									<div className='legend'>
+										<span>
+											<h2>Visibilité</h2>
+											<p>Choisis qui peut voir ta partie.</p>
+										</span>
 									</div>
-									</>
-								}
-							</section>
-						</section>
-					</div>
-					<div className='credits'>
-						<button onClick={() => {
-							document.querySelector('.backHome').style.display = 'flex';
-							document.querySelector('.terms').style.display = 'block';
-							document.querySelector('.roomsList').style.display = 'none';
-							document.querySelector('.author').style.display = 'none';
-							document.querySelector('.main').style.display = 'none';
-							document.querySelector('.credits').style.display = 'none';
-							if (last === 'main') last = 'roomsList'
-							else last = 'main'
-						}}>CONDITIONS D'UTILISATION</button>
-						<p>|</p>
-						<button onClick={() => window.open('https://github.com/Natoune/GarticPhoneClone')}>SOURCE</button>
-						<p>|</p>
-						<button onClick={() => {
-							document.querySelector('.backHome').style.display = 'flex';
-							document.querySelector('.terms').style.display = 'none';
-							document.querySelector('.roomsList').style.display = 'none';
-							document.querySelector('.author').style.display = 'block';
-							document.querySelector('.main').style.display = 'none';
-							document.querySelector('.credits').style.display = 'none';
-							if (last === 'main') last = 'roomsList'
-							else last = 'main'
-						}}>AUTEUR</button>
+									<div className='value'>
+										<Dropdown options={['privée', 'publique']} onChange={() => {
+											setTimeout(() => {
+												let visibility = document.querySelector('.visibility .Dropdown-placeholder').innerText.toLowerCase();
+												if (visibility === 'privée') visibility = false;
+												else if (visibility === 'publique') visibility = true;
+												if (typeof visibility === 'boolean') {
+													socket.emit('params', room, 'visibility', visibility, getFromLS('userId'));
+												}
+											}, 100);
+										}} value='privée'></Dropdown>		
+									</div>
+								</div>
+								<div className='param duration'>
+									<div className='legend'>
+										<span>
+											<h2>Durée</h2>
+											<p>Choisis la durée de chaque tour (le temps pour écrire les phrases ne change pas).</p>
+										</span>
+									</div>
+									<div className='value'>
+										<Dropdown options={['lente', 'normale', 'rapide', 'choix de l\'hôte à chaque tour' ]} onChange={() => {
+											setTimeout(() => {
+												let duration = document.querySelector('.duration .Dropdown-placeholder').innerText.toLowerCase();
+												socket.emit('params', room, 'duration', duration, getFromLS('userId'));
+											}, 100);
+										}} value='normale'></Dropdown>		
+									</div>
+								</div>
+							</div>
+							<div className='action'>
+							<div>
+								<button className="actionButton" id='invite' onClick={() => {
+									document.querySelector('#invite strong').innerHTML = 'Lien copié !';
+									document.querySelector('#invite').setAttribute('disabled', true);
+									navigator.clipboard.writeText(window.location.href);
+
+									setTimeout(() => {
+										document.querySelector('#invite strong').innerHTML = 'Inviter';
+										document.querySelector('#invite').removeAttribute('disabled');
+									}, 2000);
+								}}>
+									<FaLink size={25} />
+									<strong>Inviter</strong>
+								</button>
+							</div>
+							<div>
+								<button className="actionButton startButton" onClick={() => {
+									if (users.length < 4) openConfirmModal();
+									else startGame();
+								}}>
+									<FaPlay size={20} />
+									<strong>Démarrer</strong>
+								</button>
+							</div>
+							<Modal
+								isOpen={confirmModalIsOpen}
+								onRequestClose={closeConfirmModal}
+								contentLabel="Example Modal"
+								className='confirmModal'
+							>
+								<h1>Tu veux essayer ?</h1>
+								<IoIosWarning size={130} />
+								<h2>Pour une meilleur expérience, il est recommandé de jouer avec au moins 4 personnes.<br/>Veux-tu vraiment continuer ?</h2>
+								<button onClick={startGame}>OUI</button>
+								<button onClick={closeConfirmModal}>NON</button>
+							</Modal>
+						</div>
+						</div>
 					</div>
 				</header>
 			</div>
@@ -718,4 +467,4 @@ function Home() {
 	);
 }
 
-export default Home;
+export default Lobby;

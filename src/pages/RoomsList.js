@@ -9,15 +9,23 @@ function RoomsList() {
     const navigate = useNavigate();
 
     const getPublicRooms = () => {
+        let dataReceived = false;
         socket.emit('getPublicRooms', response => {
+            dataReceived = true;
             document.getElementById('roomCount').innerHTML = response.rooms.length;
     
             document.querySelector('.rooms').innerHTML = '';
             for (let i in response.rooms) {
                 let room = response.rooms[i];
-                document.querySelector('.rooms').innerHTML += `<div class="room" onclick="window.location.replace('/r/${room.id}')"><p class="id">${room.id}</p><p class="users">Nombre de joueurs: ${room.users.length}/${room.maxUsers}</p></div>`
+                document.querySelector('.rooms').innerHTML += `<div class="room" onclick="window.location.replace('/${room.id}')"><p class="id">${room.id}</p><p class="users">Nombre de joueurs: ${Object.keys(room.users).length}/${room.params.maxUsers}</p></div>`
             }
         });
+        setTimeout(() => {
+            if (!dataReceived) {
+                document.getElementById('roomCount').innerHTML = '0';
+                document.querySelector('.rooms').innerHTML = '';
+            }
+        }, process.env.REACT_APP_SOCKETIO_TIMEOUT);
     }
 
 	return (
@@ -25,7 +33,8 @@ function RoomsList() {
         <label htmlFor='joinWithCode' className='joinWithCodeLabel'>Rejoindre une partie avec un code</label>
         <input type="text" className="joinWithCode" id="joinWithCode" placeholder="ABCDEF" />
         <button className="joinWithCodeButton" onClick={() => {
-            navigate('/r/'+document.getElementById('joinWithCode').value);
+            let code = document.getElementById('joinWithCode').value.split('/')[document.getElementById('joinWithCode').value.split('/').length - 1];
+            navigate('/' + code);
         }}>
 			<strong>Rejoindre</strong>
 		</button>
@@ -36,7 +45,7 @@ function RoomsList() {
             <div className='rooms top' onScroll={() => {
                 if (document.querySelector('.rooms').scrollTop < 10) {
                     document.querySelector('.rooms').setAttribute('class', 'rooms top');
-                } else if (document.querySelector('.rooms').scrollTop > 10 && document.querySelector('.rooms').scrollTop < (document.querySelector('.rooms').childNodes.length - 3) * 75) {
+                } else if (document.querySelector('.rooms').scrollTop > 10 && document.querySelector('.rooms').scrollTop + document.querySelector('.rooms').offsetHeight + 10 <= document.querySelector('.rooms').scrollHeight) {
                     document.querySelector('.rooms').setAttribute('class', 'rooms middle');
                 } else {
                     document.querySelector('.rooms').setAttribute('class', 'rooms bottom');

@@ -3,7 +3,7 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
-    min-height: 100vh;
+    /* min-height: 100vh; */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -34,6 +34,25 @@
     -webkit-box-align: center;
     -ms-flex-align: center;
     align-items: center;
+}
+
+.credits {
+	font-family: "Bold";
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.6);
+	letter-spacing: 0.05px;
+	text-decoration: none;
+	cursor: pointer;
+	margin: auto 15px 0 auto;
+}
+
+.credits * {
+	display: inline;
+	margin: 0 5px;
+}
+
+#terms::before {
+	top: 40px;
 }
 
 .backHome {
@@ -180,6 +199,15 @@
 	padding: 0px 10px;
 }
 
+.joinContainer .name input::placeholder, .joinWithCode::placeholder {
+	color: rgba(255, 255, 255, 0.3);
+	opacity: 1;
+}
+.joinContainer .name input::-ms-input-placeholder, .joinWithCode::-ms-input-placeholder {
+	color: rgba(255, 255, 255, 0.3);
+	opacity: 1;
+}
+
 .joinContainer .action  {
 	width: 100%;
 	margin: 10% auto;
@@ -208,6 +236,7 @@
 
 .joinContainer .action .actionButton svg {
 	margin: 0 5px;
+	height: 100%;
 	color: var(--button-icon);
 }
 
@@ -285,7 +314,7 @@
 	display: none;
 }
 
-.roomsWrapper .top::after, .middle::after, .bottom::before, .middle::before {
+.top::after, .middle::after, .bottom::before, .middle::before {
 	display: block;
 	content: "";
 	width: 100%;
@@ -295,7 +324,7 @@
 	left: 0px;
 	z-index: 10;
 }
-.roomsWrapper .top::after, .middle::after {
+.top::after, .middle::after {
 	bottom: 0;
 }
 
@@ -365,7 +394,7 @@
 	}
 
 	.titlesvg {
-		width: 25%;
+		width: 30%;
 	}
 
 	.subtitlesvg {
@@ -387,6 +416,11 @@
 		height: 35px;
 	}
 
+	.aligned h1 {
+		font-size: 14px;
+		margin-left: 5px;
+	}
+
 	.joinWithCodeLabel {
 		font-size: 75%;
 	}
@@ -399,5 +433,40 @@
 		width: 120px;
 		height: 35px;
 		font-size: 100%;
+	}
+}
+
+@media (max-width: 480px) {
+	.titlesvg {
+		width: 50%;
+	}
+
+	.subtitlesvg {
+		width: 40%;
+		margin-bottom: 15px;
+	}
+
+	.joinContainer .avatar {
+		width: 80px;
+		height: 80px;
+	}
+
+	.joinContainer .avatar button {
+		width: 30px;
+		height: 30px;
+	}
+
+	.joinContainer .avatar button svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.actionButton {
+		width: 180px !important;
+		font-size: 15px !important;
+	}
+
+	.actionButton svg {
+		display: none;
 	}
 }

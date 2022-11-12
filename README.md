@@ -1,73 +1,104 @@
 # GarticPhoneClone
- Un clone amélioré de Gartic Phone utilisant React et Socket.IO
+Un clone amélioré de Gartic Phone utilisant React et Socket.IO
 
-# Getting Started with Create React App
++ [Application React](#application-react)
+    + [Avant de commencer](#avant-de-commencer)
+    + [.env](#env)
+    + [Page d'administration](#page-dadministration)
+    + [Scripts](#scripts)
+        + [npm start](#npm-start)
+        + [npm test](#npm-test)
+        + [npm run build](#npm-run-build)
+        + [Plus d'informations](#plus-dinformations)
++ [Serveur SOCKET.IO](#serveur-socketio)
+    + [Avant de commencer](#avant-de-commencer-1)
+    + [.env](#env-1)
+     + [Scripts](#scripts)
+        + [npm start](#npm-start-1)
+        + [npm run build](#npm-run-build-1)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Application React
 
-## Available Scripts
+## Avant de commencer
 
-In the project directory, you can run:
+Exécutez la commande `npm install` à la racine du projet pour installer toutes les dépendances de l'application React.
 
-### `npm start`
+## .env
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Créez un fichier .env à la racine du projet:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```.env
+REACT_APP_SOCKETIO_TIMEOUT=5000
+REACT_APP_SOCKETIO_SERVER=http://127.0.0.1:3001/
+```
 
-### `npm test`
+`REACT_APP_SOCKETIO_TIMEOUT`: Délai de réponse maximum pour les requêtes aux serveurs\
+`REACT_APP_SOCKETIO_SERVER`: URL du serveur SOCKET.IO
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Page d'administration
 
-### `npm run build`
+Pour vous rendre sur la page d'administration, rentrez l'url http://localhost:3000/admin/USER/PASSWORD avec les identifiants définis dans le [.env du serveur](#env-1).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Scripts
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### `npm start`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Exécute l'application en mode développement.\
+Ouvrez [http://localhost:3000](http://localhost:3000) pour l'afficher dans votre navigateur.
 
-### `npm run eject`
+La page se rechargera lorsque vous apporterez des modifications.\
+Vous pouvez également voir les erreurs dans la console.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+#### `npm test`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Lance les tests en watch mode.\
+Voir la section sur [l'exécution de tests](https://facebook.github.io/create-react-app/docs/running-tests) de la documentation de Create React App pour plus d'informations.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### `npm run build`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Génère l'application en mode production dans le dossier `build`.\
+Il regroupe correctement React en mode production et optimise la construction pour les meilleures performances.
 
-## Learn More
+La construction est minifiée et les noms de fichiers incluent les hashs.\
+Votre application est prête à être déployée !
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Voir la section sur le [déploiement](https://facebook.github.io/create-react-app/docs/deployment) de la documentation de Create React App pour plus d'informations.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Plus d'informations
 
-### Code Splitting
+Pour en savoir plus, consultez la [documentation de Create React App](https://facebook.github.io/create-react-app/docs/getting-started).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Pour apprendre React, consultez la [documentation React](https://reactjs.org/).
 
-### Analyzing the Bundle Size
+# Serveur SOCKET.IO
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Le serveur Socekt.IO se trouve dans le dossier [/server/](/server/)
 
-### Making a Progressive Web App
+## Avant de commencer
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Exécutez la commande `npm install` dans le dossier `server` pour installer toutes les dépendances.
 
-### Advanced Configuration
+## .env
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Créez un fichier .env dans le dossier server:
 
-### Deployment
+```.env
+PORT=3001
+ADMIN_USER=b026aba01a531ec3d8f71b65c2972bf5
+ADMIN_PASSWORD=bd8ff1083de9bcfcd7b599d0f774211a
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+`PORT`: Port d'exécution du serveur (Ne pas oublier de modifier le port sur le [.env de l'application React](#env))\
+`ADMIN_USER`: Le nom d'utilisateur de connexion à l'espace admin hashé en md5\
+`ADMIN_PASSWORD`: Le mot de passe de connexion à l'espace admin hashé en md5
 
-### `npm run build` fails to minify
+**Note:** Vous pouvez utiliser [cet outil](https://emn178.github.io/online-tools/md5) pour hasher le nom d'utilisateur et le mot de passe.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+#### `npm start`
+
+Lance l'application en mode développement\
+[Nodemon](https://nodemon.io/) redémarre le serveur automatiquement à chaque modification de code.
+
+#### `npm run build`
+
+Build par défaut de typescript

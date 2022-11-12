@@ -4,11 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "nodemon index.ts",
+    "build": "rm -rf dist/ && tsc --project . && node dist/app.js"
   },
   "author": "Natoune",
   "license": "MIT",
   "dependencies": {
+    "@types/socket.io": "^3.0.2",
+    "dotenv": "^16.0.3",
     "log4js": "^6.7.0",
     "socket.io": "^4.5.3",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.4.0"

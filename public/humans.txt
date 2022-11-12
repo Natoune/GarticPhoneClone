@@ -1,0 +1,19 @@
+/* TEAM */
+	Chef: Natoune
+    Contact: contact [at] natoune.tk
+    Twitter : @nat0une_
+    Location: France
+
+
+/* SITE */
+    Site name: Gartic Phone
+    Language: French
+    Doctype: HTML5
+    IDE: VS Code
+    Contact: garticphone [at] natoune.tk
+    
+    Editor: Natoune
+    URL: https://natoune.tk
+    Contact: contact [at] natoune.tk
+    Twitter : @nat0une_
+    Location: France
